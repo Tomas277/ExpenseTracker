@@ -42,6 +42,8 @@ Tests use a temporary database, so your real `expenses.db` is never touched.
 
 The initial version was hand-coded as a practice project to remind myself of the tech behind a small web app. Development continues with Claude Code (security checks, polish, new features).
 
+The original project was written before version control was set up, which is why the Git history starts on 20.10.2026.
+
 Tech and concepts used:
 - Flask routes and form handling
 - Jinja templates
