@@ -1,3 +1,4 @@
+import math
 from datetime import date
 
 from flask import Flask, render_template, request, redirect
@@ -23,6 +24,9 @@ def add():
     except ValueError:
         return render_index("Amount must be a number")
 
+    if not math.isfinite(amount):
+        return render_index("Amount must be a number")
+
     if amount <= 0:
         return render_index("Amount must be positive")
 
@@ -34,7 +38,7 @@ def add():
 
     if date_text:
         try:
-            date.fromisoformat(date_text)
+            date_text = date.fromisoformat(date_text).isoformat()
         except ValueError:
             return render_index("Date must be YYYY-MM-DD")
 
