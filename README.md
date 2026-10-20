@@ -2,6 +2,8 @@
 
 Small Flask + SQLite web app for tracking personal expenses. Add expenses with an amount, category, description and date, see the total and per-category totals, and delete entries.
 
+![Screenshot of the app](docs/screenshot.png)
+
 ## Setup
 
 ```bash
@@ -20,11 +22,21 @@ Open http://127.0.0.1:5000. The SQLite database (`expenses.db`) is created next 
 
 **Local use only:** there is no authentication or CSRF protection, and the app runs with `debug=True`. Don't expose it to a network or deploy it as is.
 
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Tests use a temporary database, so your real `expenses.db` is never touched.
+
 ## Layout
 
 - `app.py` – Flask routes and input validation
 - `database.py` – SQLite access
 - `templates/`, `static/` – HTML and CSS
+- `tests/` – pytest tests for validation, database functions and routes
 
 ## About
 
