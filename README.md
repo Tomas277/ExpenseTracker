@@ -18,6 +18,8 @@ python app.py
 
 Open http://127.0.0.1:5000. The SQLite database (`expenses.db`) is created next to the app on first run.
 
+**Local use only:** there is no authentication or CSRF protection, and the app runs with `debug=True`. Don't expose it to a network or deploy it as is.
+
 ## Layout
 
 - `app.py` – Flask routes and input validation
@@ -36,3 +38,7 @@ Tech and concepts used:
 - Server-side input validation
 
 Ideas for later: edit expenses, filter by month, CSV export.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
