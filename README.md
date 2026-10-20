@@ -26,7 +26,7 @@ Open http://127.0.0.1:5000. The SQLite database (`expenses.db`) is created next 
 
 ## About
 
-Hand-coded practice project to learn and remember the basics of a small web app.
+The initial version was hand-coded as a practice project to remind myself of the tech behind a small web app. Development continues with Claude Code (security checks, polish, new features).
 
 Tech and concepts used:
 - Flask routes and form handling
