@@ -23,3 +23,16 @@ Open http://127.0.0.1:5000. The SQLite database (`expenses.db`) is created next 
 - `app.py` – Flask routes and input validation
 - `database.py` – SQLite access
 - `templates/`, `static/` – HTML and CSS
+
+## About
+
+Hand-coded practice project to learn and remember the basics of a small web app.
+
+Tech and concepts used:
+- Flask routes and form handling
+- Jinja templates
+- Raw `sqlite3` with parameterized queries
+- POST-redirect-GET pattern
+- Server-side input validation
+
+Ideas for later: edit expenses, filter by month, CSV export.
