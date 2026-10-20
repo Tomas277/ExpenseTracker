@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Expenses</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Expenses</h1>
+      <div class="total">
+        <span class="label">Total</span>
+        <span class="amount">{{ "%.2f"|format(total) }} €</span>
+      </div>
+    </header>
+
+    {% if error %}
+      <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
+
+    <form class="add" action="/add" method="post">
+      <input name="amount" inputmode="decimal" placeholder="Amount">
+      <input name="category" placeholder="Category">
+      <input name="description" placeholder="Description">
+      <input name="date" type="date">
+      <button class="primary">Add</button>
+    </form>
+
+    <section>
+      <h2>All expenses</h2>
+      {% if expenses %}
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th class="num">Amount</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for id, amount, category, description, date in expenses %}
+              <tr>
+                <td class="date">{{ date }}</td>
+                <td><span class="chip">{{ category }}</span></td>
+                <td>{{ description }}</td>
+                <td class="num">{{ "%.2f"|format(amount) }}</td>
+                <td class="actions">
+                  <form action="/delete" method="post">
+                    <input type="hidden" name="expense_id" value="{{ id }}">
+                    <button class="delete" title="Delete expense">Delete</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="empty">No expenses yet. Add your first one above.</p>
+      {% endif %}
+    </section>
+
+    <section>
+      <h2>By category</h2>
+      {% if by_category %}
+        <ul class="categories">
+          {% for category, amount in by_category %}
+            <li>
+              <span class="chip">{{ category }}</span>
+              <span class="num">{{ "%.2f"|format(amount) }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty">Nothing to total yet.</p>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>
