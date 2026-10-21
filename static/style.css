@@ -75,6 +75,11 @@ form.add {
 
 form.add input[type="date"] { color-scheme: light dark; }
 
+tr.editing td { vertical-align: top; }
+tr.editing input { width: 100%; padding: 0.35rem 0.5rem; }
+tr.editing input.amount { text-align: right; min-width: 5.5rem; }
+tr.editing input[type="date"] { min-width: 9rem; color-scheme: light dark; }
+
 .combo { position: relative; min-width: 0; }
 .combo input { width: 100%; }
 
@@ -162,14 +167,14 @@ button.delete {
 }
 button.delete:hover { background: var(--danger-bg); color: var(--danger); }
 
-a.edit, a.back {
+a.edit {
   color: var(--muted);
   text-decoration: none;
   border-radius: 8px;
   padding: 0.25rem 0.6rem;
   font-size: 0.85rem;
 }
-a.edit:hover, a.back:hover { background: var(--chip); color: var(--chip-text); }
+a.edit:hover { background: var(--chip); color: var(--chip-text); }
 
 .categories { list-style: none; margin: 0; padding: 0; }
 .categories li {
@@ -192,4 +197,7 @@ a.edit:hover, a.back:hover { background: var(--chip); color: var(--chip-text); }
   section { padding: 1rem 0.75rem; }
   th, td { padding: 0.55rem 0.3rem; }
   .date { font-size: 0.85rem; }
+  tr.editing { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; padding: 0.5rem 0; border-bottom: 1px solid var(--line); }
+  tr.editing td, tr.editing td:nth-child(3) { display: block; padding: 0; border: 0; }
+  tr.editing td:nth-child(3), tr.editing .actions { grid-column: 1 / -1; }
 }

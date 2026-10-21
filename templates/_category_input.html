@@ -1,0 +1,10 @@
+{% macro category_input(categories, list_id, value="", form_id="") %}
+<div class="combo">
+  <input name="category" placeholder="Category" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="{{ list_id }}" value="{{ value }}"{% if form_id %} form="{{ form_id }}"{% endif %}>
+  <ul class="combo-list" id="{{ list_id }}" role="listbox" hidden>
+    {% for name in categories %}
+      <li role="option">{{ name }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endmacro %}

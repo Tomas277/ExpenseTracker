@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  {% from "_category_input.html" import category_input %}
   <main>
     <header>
       <h1>Expenses</h1>
@@ -21,13 +22,19 @@
     {% endif %}
 
     <form class="add" action="/add" method="post">
-      {% include "_expense_fields.html" %}
+      <input name="amount" inputmode="decimal" placeholder="Amount">
+      {{ category_input(categories, "category-list") }}
+      <input name="description" placeholder="Description">
+      <input name="date" type="date">
       <button class="primary">Add</button>
     </form>
 
     <section>
       <h2>All expenses</h2>
       {% if expenses %}
+        {% if edit_id %}
+          <form id="edit-form" action="/edit/{{ edit_id }}" method="post"></form>
+        {% endif %}
         <table>
           <thead>
             <tr>
@@ -40,19 +47,32 @@
           </thead>
           <tbody>
             {% for id, amount, category, description, date in expenses %}
-              <tr>
+              {% if id == edit_id %}
+              <tr class="editing" id="expense-{{ id }}">
+                <td><input form="edit-form" name="date" type="date" value="{{ edit_form.date }}"></td>
+                <td>{{ category_input(categories, "edit-category-list", edit_form.category, "edit-form") }}</td>
+                <td><input form="edit-form" name="description" placeholder="Description" value="{{ edit_form.description }}"></td>
+                <td class="num"><input form="edit-form" name="amount" class="amount" inputmode="decimal" placeholder="Amount" value="{{ edit_form.amount }}"></td>
+                <td class="actions">
+                  <button form="edit-form" class="primary">Save</button>
+                  <a class="edit" href="/">Cancel</a>
+                </td>
+              </tr>
+              {% else %}
+              <tr id="expense-{{ id }}">
                 <td class="date">{{ date }}</td>
                 <td><span class="chip">{{ category }}</span></td>
                 <td>{{ description }}</td>
                 <td class="num">{{ amount|money }} €</td>
                 <td class="actions">
-                  <a class="edit" href="/edit/{{ id }}">Edit</a>
+                  <a class="edit" href="/?edit={{ id }}">Edit</a>
                   <form action="/delete" method="post">
                     <input type="hidden" name="expense_id" value="{{ id }}">
                     <button class="delete" title="Delete expense">Delete</button>
                   </form>
                 </td>
               </tr>
+              {% endif %}
             {% endfor %}
           </tbody>
         </table>
@@ -79,5 +99,6 @@
   </main>
 
   <script src="{{ url_for('static', filename='combo.js') }}"></script>
+  <script src="{{ url_for('static', filename='scroll.js') }}"></script>
 </body>
 </html>

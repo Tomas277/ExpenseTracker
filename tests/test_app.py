@@ -100,13 +100,31 @@ def edit(client, expense_id, **overrides):
     return client.post(f"/edit/{expense_id}", data=data)
 
 
-def test_edit_page_prefilled(client, db):
+def test_edit_row_prefilled_in_place(client, db):
     add(client, amount="12,5", description="Lunch")
+    add(client, description="Other", date="2026-09-01")
     expense_id = db.get_expenses()[0][0]
-    body = client.get(f"/edit/{expense_id}").data
+    body = client.get(f"/?edit={expense_id}").data
+    assert b'action="/edit/%d"' % expense_id in body
     assert b'value="12.50"' in body
     assert b'value="Lunch"' in body
     assert b'value="2026-10-01"' in body
+    assert body.count(b'class="editing"') == 1
+    assert b"Other" in body
+
+
+def test_edit_unknown_id_shows_normal_page(client, db):
+    add(client)
+    assert b'class="editing"' not in client.get("/?edit=999").data
+    assert b'class="editing"' not in client.get("/?edit=abc").data
+
+
+def test_edit_get_redirects_to_row(client, db):
+    add(client)
+    expense_id = db.get_expenses()[0][0]
+    response = client.get(f"/edit/{expense_id}")
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith(f"/?edit={expense_id}")
 
 
 def test_edit_saves_and_redirects(client, db):
@@ -128,6 +146,7 @@ def test_edit_invalid_rejected_and_input_kept(client, db):
     expense_id = db.get_expenses()[0][0]
     response = edit(client, expense_id, amount="abc", description="Changed")
     assert b"Amount must be a number" in response.data
+    assert b'class="editing"' in response.data
     assert b'value="Changed"' in response.data
     assert db.get_expense(expense_id)[3] == "Lunch"
 
@@ -140,7 +159,7 @@ def test_edit_missing_expense_redirects(client):
 def test_index_links_to_edit(client, db):
     add(client)
     expense_id = db.get_expenses()[0][0]
-    assert f'href="/edit/{expense_id}"'.encode() in client.get("/").data
+    assert f'href="/?edit={expense_id}"'.encode() in client.get("/").data
 
 
 def test_import_does_not_touch_database(tmp_path, monkeypatch):
