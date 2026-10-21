@@ -1,6 +1,6 @@
 # ExpenseTracker
 
-Small Flask + SQLite web app for tracking personal expenses. Add expenses with an amount, category, description and date, see the total and per-category totals, and delete entries.
+Small Flask + SQLite web app for tracking personal expenses. Add expenses with an amount, category, description and date, edit them in place, and delete entries. Categories you use are saved and suggested next time, and the page shows the total and per-category totals.
 
 ![Screenshot of the app](docs/screenshot.png)
 
@@ -33,9 +33,9 @@ Tests use a temporary database, so your real `expenses.db` is never touched.
 
 ## Layout
 
-- `app.py` – Flask routes and input validation
+- `app.py` – Flask app factory, routes and input validation
 - `database.py` – SQLite access
-- `templates/`, `static/` – HTML and CSS
+- `templates/`, `static/` – HTML, CSS and two small scripts (category suggestions, keeping the scroll position when editing)
 - `tests/` – pytest tests for validation, database functions and routes
 
 ## About
@@ -50,8 +50,10 @@ Tech and concepts used:
 - Raw `sqlite3` with parameterized queries
 - POST-redirect-GET pattern
 - Server-side input validation
+- Amounts stored as integer cents (parsed with `Decimal`) to avoid float rounding errors
+- App factory (`create_app()`) so importing the app has no side effects
 
-Ideas for later: edit expenses, filter by month, CSV export.
+Ideas for later: filter by month, CSV export.
 
 ## License
 
