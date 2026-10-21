@@ -14,7 +14,7 @@ def create_app():
 
     @app.route("/")
     def index():
-        return render_index()
+        return render_index(edit_id=request.args.get("edit", type=int))
 
     @app.route("/add", methods=["POST"])
     def add():
@@ -26,22 +26,17 @@ def create_app():
 
     @app.route("/edit/<int:expense_id>", methods=["GET", "POST"])
     def edit(expense_id):
-        expense = get_expense(expense_id)
-        if expense is None:
+        if get_expense(expense_id) is None:
             return redirect("/")
 
-        if request.method == "POST":
-            values, error = parse_expense_form()
-            if not error:
-                update_expense(expense_id, *values)
-                return redirect("/")
-            form = request.form
-        else:
-            _, amount_cents, category, description, date_text = expense
-            form = {"amount": format_cents(amount_cents), "category": category, "description": description, "date": date_text}
-            error = None
+        if request.method == "GET":
+            return redirect(f"/?edit={expense_id}")
 
-        return render_template("edit.html", expense_id=expense_id, form=form, categories=get_categories(), error=error)
+        values, error = parse_expense_form()
+        if error:
+            return render_index(error, edit_id=expense_id, edit_form=request.form)
+        update_expense(expense_id, *values)
+        return redirect("/")
 
     @app.route("/delete", methods=["POST"])
     def delete():
@@ -98,8 +93,16 @@ def parse_expense_form():
 
     return (cents, category, description, date_text), None
 
-def render_index(error=None):
-    return render_template("index.html", expenses=get_expenses(), total=get_total(), by_category=get_total_by_category(), categories=get_categories(), error=error)
+def render_index(error=None, edit_id=None, edit_form=None):
+    expenses = get_expenses()
+    if edit_id is not None and edit_form is None:
+        match = next((e for e in expenses if e[0] == edit_id), None)
+        if match:
+            _, amount_cents, category, description, date_text = match
+            edit_form = {"amount": format_cents(amount_cents), "category": category, "description": description, "date": date_text}
+    if edit_form is None:
+        edit_id = None
+    return render_template("index.html", expenses=expenses, total=get_total(), by_category=get_total_by_category(), categories=get_categories(), error=error, edit_id=edit_id, edit_form=edit_form)
 
 if __name__ == "__main__":
     create_app().run(debug=True)
