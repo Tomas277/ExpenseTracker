@@ -37,3 +37,36 @@ def test_totals(db):
 def test_empty_total_is_zero(db):
     assert db.get_total() == 0
     assert db.get_total_by_category() == []
+
+
+def test_categories_empty_on_fresh_db(db):
+    assert db.get_categories() == []
+
+
+def test_add_expense_saves_category(db):
+    db.add_expense(1, "Food", "x", "2026-01-01")
+    db.add_expense(1, "Rent", "y", "2026-01-02")
+    assert db.get_categories() == ["Food", "Rent"]
+
+
+def test_categories_deduplicated_case_insensitive(db):
+    db.add_expense(1, "Food", "x", "2026-01-01")
+    db.add_expense(1, "food", "y", "2026-01-02")
+    assert db.get_categories() == ["Food"]
+
+
+def test_category_kept_after_expense_deleted(db):
+    db.add_expense(1, "Food", "x", "2026-01-01")
+    db.delete_expense(db.get_expenses()[0][0])
+    assert db.get_categories() == ["Food"]
+
+
+def test_init_db_backfills_categories(db):
+    import sqlite3
+
+    conn = sqlite3.connect(db.DB_PATH)
+    conn.execute("INSERT INTO expenses (amount, category, description, date) VALUES (1, 'Old', 'x', '2026-01-01')")
+    conn.commit()
+    conn.close()
+    db.init_db()
+    assert db.get_categories() == ["Old"]

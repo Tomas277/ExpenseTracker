@@ -16,6 +16,8 @@ def init_db():
             date TEXT NOT NULL
         )
     """)
+    cur.execute("CREATE TABLE IF NOT EXISTS categories (name TEXT PRIMARY KEY COLLATE NOCASE)")
+    cur.execute("INSERT OR IGNORE INTO categories (name) SELECT DISTINCT category FROM expenses")
     conn.commit()
     conn.close()
 
@@ -24,6 +26,7 @@ def add_expense(amount, category, description, date_text=None):
         date_text = date.today().isoformat()
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO categories (name) VALUES (?)", (category,))
     cur.execute("INSERT INTO expenses (amount, category, description, date) VALUES (?, ?, ?, ?)", (amount, category, description, date_text))
     conn.commit()
     conn.close()
@@ -42,6 +45,14 @@ def delete_expense(expense_id):
     cur.execute("DELETE FROM expenses WHERE id = ?", (expense_id,))
     conn.commit()
     conn.close()
+
+def get_categories():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT name FROM categories ORDER BY name")
+    rows = [row[0] for row in cur.fetchall()]
+    conn.close()
+    return rows
 
 def get_total():
     conn = sqlite3.connect(DB_PATH)

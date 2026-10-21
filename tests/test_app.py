@@ -80,3 +80,13 @@ def test_html_is_escaped(client):
     body = client.get("/").data
     assert b"<script>alert(1)</script>" not in body
     assert b"&lt;script&gt;" in body
+
+
+def test_new_category_suggested_on_index(client):
+    add(client, category="Groceries")
+    assert b'<option value="Groceries">' in client.get("/").data
+
+
+def test_category_suggestion_is_escaped(client):
+    add(client, category='"><script>')
+    assert b"<script>" not in client.get("/").data
