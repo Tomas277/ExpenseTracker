@@ -22,7 +22,12 @@
 
     <form class="add" action="/add" method="post">
       <input name="amount" inputmode="decimal" placeholder="Amount">
-      <input name="category" placeholder="Category">
+      <input name="category" list="categories" placeholder="Category">
+      <datalist id="categories">
+        {% for name in categories %}
+          <option value="{{ name }}">
+        {% endfor %}
+      </datalist>
       <input name="description" placeholder="Description">
       <input name="date" type="date">
       <button class="primary">Add</button>

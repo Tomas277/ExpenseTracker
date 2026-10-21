@@ -3,7 +3,7 @@ from datetime import date
 
 from flask import Flask, render_template, request, redirect
 
-from database import add_expense, delete_expense, get_total, get_total_by_category, init_db, get_expenses
+from database import add_expense, delete_expense, get_categories, get_total, get_total_by_category, init_db, get_expenses
 
 app = Flask(__name__)
 init_db()
@@ -55,7 +55,7 @@ def delete():
     return redirect("/")
 
 def render_index(error=None):
-    return render_template("index.html", expenses=get_expenses(), total=get_total(), by_category=get_total_by_category(), error=error)
+    return render_template("index.html", expenses=get_expenses(), total=get_total(), by_category=get_total_by_category(), categories=get_categories(), error=error)
 
 if __name__ == "__main__":
     app.run(debug=True)
