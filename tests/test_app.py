@@ -14,12 +14,12 @@ def test_index_ok(client):
 def test_add_redirects_and_saves(client, db):
     response = add(client)
     assert response.status_code == 302
-    assert db.get_expenses()[0][1] == 10
+    assert db.get_expenses()[0][1] == 1000
 
 
 def test_comma_decimal_accepted(client, db):
     add(client, amount="12,50")
-    assert db.get_expenses()[0][1] == 12.5
+    assert db.get_expenses()[0][1] == 1250
 
 
 @pytest.mark.parametrize("amount", ["abc", "", "nan", "inf", "-inf", "1e999"])
@@ -113,7 +113,7 @@ def test_edit_saves_and_redirects(client, db):
     add(client)
     expense_id = db.get_expenses()[0][0]
     assert edit(client, expense_id).status_code == 302
-    assert db.get_expense(expense_id) == (expense_id, 20, "Rent", "Flat", "2026-11-01")
+    assert db.get_expense(expense_id) == (expense_id, 2000, "Rent", "Flat", "2026-11-01")
 
 
 def test_edit_blank_date_keeps_existing(client, db):
@@ -153,3 +153,28 @@ def test_import_does_not_touch_database(tmp_path, monkeypatch):
     monkeypatch.setattr(database, "DB_PATH", str(path))
     importlib.reload(app_module)
     assert not path.exists()
+
+
+@pytest.mark.parametrize("amount, cents", [("12.345", 1235), ("0.1", 10), ("5", 500), ("1,05", 105), ("0.005", 1)])
+def test_amount_stored_as_whole_cents(client, db, amount, cents):
+    add(client, amount=amount)
+    assert db.get_expenses()[0][1] == cents
+
+
+def test_amount_rounding_to_zero_rejected(client, db):
+    assert b"Amount must be positive" in add(client, amount="0.004").data
+    assert db.get_expenses() == []
+
+
+def test_huge_amount_rejected(client, db):
+    assert b"Amount is too large" in add(client, amount="1e20").data
+    assert db.get_expenses() == []
+
+
+def test_amounts_displayed_with_two_decimals(client):
+    add(client, amount="3")
+    add(client, amount="0,1", category="Snacks", description="dime")
+    body = client.get("/").data
+    assert body.count("3.00 €".encode()) == 2
+    assert body.count("0.10 €".encode()) == 2
+    assert b"3.10 \xe2\x82\xac" in body
