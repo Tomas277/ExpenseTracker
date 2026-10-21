@@ -92,3 +92,52 @@ def test_category_suggestion_is_escaped(client):
     data = client.get("/").data
     assert b'"><script>' not in data
     assert b"&#34;&gt;&lt;script&gt;" in data
+
+
+def edit(client, expense_id, **overrides):
+    data = {"amount": "20", "category": "Rent", "description": "Flat", "date": "2026-11-01"}
+    data.update(overrides)
+    return client.post(f"/edit/{expense_id}", data=data)
+
+
+def test_edit_page_prefilled(client, db):
+    add(client, amount="12,5", description="Lunch")
+    expense_id = db.get_expenses()[0][0]
+    body = client.get(f"/edit/{expense_id}").data
+    assert b'value="12.50"' in body
+    assert b'value="Lunch"' in body
+    assert b'value="2026-10-01"' in body
+
+
+def test_edit_saves_and_redirects(client, db):
+    add(client)
+    expense_id = db.get_expenses()[0][0]
+    assert edit(client, expense_id).status_code == 302
+    assert db.get_expense(expense_id) == (expense_id, 20, "Rent", "Flat", "2026-11-01")
+
+
+def test_edit_blank_date_keeps_existing(client, db):
+    add(client)
+    expense_id = db.get_expenses()[0][0]
+    edit(client, expense_id, date="")
+    assert db.get_expense(expense_id)[4] == "2026-10-01"
+
+
+def test_edit_invalid_rejected_and_input_kept(client, db):
+    add(client)
+    expense_id = db.get_expenses()[0][0]
+    response = edit(client, expense_id, amount="abc", description="Changed")
+    assert b"Amount must be a number" in response.data
+    assert b'value="Changed"' in response.data
+    assert db.get_expense(expense_id)[3] == "Lunch"
+
+
+def test_edit_missing_expense_redirects(client):
+    assert client.get("/edit/999").status_code == 302
+    assert edit(client, 999).status_code == 302
+
+
+def test_index_links_to_edit(client, db):
+    add(client)
+    expense_id = db.get_expenses()[0][0]
+    assert f'href="/edit/{expense_id}"'.encode() in client.get("/").data

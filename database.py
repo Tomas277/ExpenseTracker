@@ -39,6 +39,22 @@ def get_expenses():
     conn.close()
     return rows
 
+def get_expense(expense_id):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT id, amount, category, description, date FROM expenses WHERE id = ?", (expense_id,))
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+def update_expense(expense_id, amount, category, description, date_text=None):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("INSERT OR IGNORE INTO categories (name) VALUES (?)", (category,))
+    cur.execute("UPDATE expenses SET amount = ?, category = ?, description = ?, date = COALESCE(?, date) WHERE id = ?", (amount, category, description, date_text, expense_id))
+    conn.commit()
+    conn.close()
+
 def delete_expense(expense_id):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()

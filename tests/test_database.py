@@ -70,3 +70,25 @@ def test_init_db_backfills_categories(db):
     conn.close()
     db.init_db()
     assert db.get_categories() == ["Old"]
+
+
+def test_get_expense(db):
+    db.add_expense(5, "Food", "x", "2026-01-01")
+    expense_id = db.get_expenses()[0][0]
+    assert db.get_expense(expense_id) == (expense_id, 5, "Food", "x", "2026-01-01")
+    assert db.get_expense(999) is None
+
+
+def test_update_expense(db):
+    db.add_expense(5, "Food", "x", "2026-01-01")
+    expense_id = db.get_expenses()[0][0]
+    db.update_expense(expense_id, 7.5, "Rent", "y", "2026-02-02")
+    assert db.get_expense(expense_id) == (expense_id, 7.5, "Rent", "y", "2026-02-02")
+    assert db.get_categories() == ["Food", "Rent"]
+
+
+def test_update_expense_keeps_date_when_none(db):
+    db.add_expense(5, "Food", "x", "2026-01-01")
+    expense_id = db.get_expenses()[0][0]
+    db.update_expense(expense_id, 6, "Food", "x")
+    assert db.get_expense(expense_id)[4] == "2026-01-01"

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit expense</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Edit expense</h1>
+      <a class="back" href="/">← Back</a>
+    </header>
+
+    {% if error %}
+      <p class="error" role="alert">{{ error }}</p>
+    {% endif %}
+
+    <form class="add" action="/edit/{{ expense_id }}" method="post">
+      {% include "_expense_fields.html" %}
+      <button class="primary">Save</button>
+    </form>
+  </main>
+
+  <script src="{{ url_for('static', filename='combo.js') }}"></script>
+</body>
+</html>
