@@ -69,9 +69,37 @@ section, form.add {
 
 form.add {
   display: grid;
-  grid-template-columns: 110px 1fr 1.6fr 150px auto;
+  grid-template-columns: 110px 1fr 1.6fr 180px auto;
   gap: 0.6rem;
 }
+
+form.add input[type="date"] { color-scheme: light dark; }
+
+.combo { position: relative; min-width: 0; }
+.combo input { width: 100%; }
+
+.combo-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(20rem, 90vw);
+  z-index: 10;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  max-height: 12rem;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+.combo-list[hidden] { display: none; }
+.combo-list li { padding: 0.4rem 0.6rem; border-radius: 6px; cursor: pointer; }
+.combo-list li[hidden] { display: none; }
+.combo-list li:hover, .combo-list li.active { background: var(--chip); color: var(--chip-text); }
 
 input {
   font: inherit;
