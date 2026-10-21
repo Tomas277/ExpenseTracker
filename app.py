@@ -3,7 +3,7 @@ from datetime import date
 
 from flask import Flask, render_template, request, redirect
 
-from database import add_expense, delete_expense, get_categories, get_total, get_total_by_category, init_db, get_expenses
+from database import add_expense, delete_expense, get_categories, get_expense, get_total, get_total_by_category, init_db, get_expenses, update_expense
 
 app = Flask(__name__)
 init_db()
@@ -12,8 +12,7 @@ init_db()
 def index():
     return render_index()
 
-@app.route("/add", methods=["POST"])
-def add():
+def parse_expense_form():
     amount = request.form["amount"].strip().replace(",",".")
     category = request.form["category"].strip()
     description = request.form["description"].strip()
@@ -22,28 +21,54 @@ def add():
     try:
         amount = float(amount)
     except ValueError:
-        return render_index("Amount must be a number")
+        return None, "Amount must be a number"
 
     if not math.isfinite(amount):
-        return render_index("Amount must be a number")
+        return None, "Amount must be a number"
 
     if amount <= 0:
-        return render_index("Amount must be positive")
+        return None, "Amount must be positive"
 
     if not category:
-        return render_index("Category can't be empty")
+        return None, "Category can't be empty"
 
     if not description:
-        return render_index("Description can't be empty")
+        return None, "Description can't be empty"
 
     if date_text:
         try:
             date_text = date.fromisoformat(date_text).isoformat()
         except ValueError:
-            return render_index("Date must be YYYY-MM-DD")
+            return None, "Date must be YYYY-MM-DD"
 
-    add_expense(amount, category, description, date_text)
+    return (amount, category, description, date_text), None
+
+@app.route("/add", methods=["POST"])
+def add():
+    values, error = parse_expense_form()
+    if error:
+        return render_index(error)
+    add_expense(*values)
     return redirect("/")
+
+@app.route("/edit/<int:expense_id>", methods=["GET", "POST"])
+def edit(expense_id):
+    expense = get_expense(expense_id)
+    if expense is None:
+        return redirect("/")
+
+    if request.method == "POST":
+        values, error = parse_expense_form()
+        if not error:
+            update_expense(expense_id, *values)
+            return redirect("/")
+        form = request.form
+    else:
+        _, amount, category, description, date_text = expense
+        form = {"amount": "%.2f" % amount, "category": category, "description": description, "date": date_text}
+        error = None
+
+    return render_template("edit.html", expense_id=expense_id, form=form, categories=get_categories(), error=error)
 
 @app.route("/delete", methods=["POST"])
 def delete():

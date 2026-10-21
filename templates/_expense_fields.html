@@ -1,0 +1,11 @@
+      <input name="amount" inputmode="decimal" placeholder="Amount" value="{{ form.amount if form else '' }}">
+      <div class="combo">
+        <input name="category" placeholder="Category" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="category-list" value="{{ form.category if form else '' }}">
+        <ul class="combo-list" id="category-list" role="listbox" hidden>
+          {% for name in categories %}
+            <li role="option">{{ name }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <input name="description" placeholder="Description" value="{{ form.description if form else '' }}">
+      <input name="date" type="date" value="{{ form.date if form else '' }}">

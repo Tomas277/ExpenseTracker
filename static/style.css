@@ -142,8 +142,8 @@ tbody tr:last-child td { border-bottom: 0; }
 tbody tr:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
 .date { color: var(--muted); white-space: nowrap; }
-.actions { width: 1%; }
-.actions form { margin: 0; }
+.actions { width: 1%; white-space: nowrap; }
+.actions form { margin: 0; display: inline; }
 
 .chip {
   display: inline-block;
@@ -161,6 +161,15 @@ button.delete {
   font-size: 0.85rem;
 }
 button.delete:hover { background: var(--danger-bg); color: var(--danger); }
+
+a.edit, a.back {
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.85rem;
+}
+a.edit:hover, a.back:hover { background: var(--chip); color: var(--chip-text); }
 
 .categories { list-style: none; margin: 0; padding: 0; }
 .categories li {
