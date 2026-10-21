@@ -13,5 +13,6 @@ def db(tmp_path, monkeypatch):
 
 @pytest.fixture
 def client(db):
-    app_module.app.config["TESTING"] = True
-    return app_module.app.test_client()
+    app = app_module.create_app()
+    app.config["TESTING"] = True
+    return app.test_client()
