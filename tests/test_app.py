@@ -141,3 +141,15 @@ def test_index_links_to_edit(client, db):
     add(client)
     expense_id = db.get_expenses()[0][0]
     assert f'href="/edit/{expense_id}"'.encode() in client.get("/").data
+
+
+def test_import_does_not_touch_database(tmp_path, monkeypatch):
+    import importlib
+
+    import app as app_module
+    import database
+
+    path = tmp_path / "untouched.db"
+    monkeypatch.setattr(database, "DB_PATH", str(path))
+    importlib.reload(app_module)
+    assert not path.exists()
