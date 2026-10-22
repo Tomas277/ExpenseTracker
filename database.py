@@ -32,6 +32,11 @@ def init_db():
     conn.commit()
     conn.close()
 
+def month_filter(month):
+    if month:
+        return "WHERE substr(date, 1, 7) = ?", (month,)
+    return "", ()
+
 def add_expense(amount_cents, category, description, date_text=None):
     if date_text is None:
         date_text = date.today().isoformat()
@@ -42,10 +47,11 @@ def add_expense(amount_cents, category, description, date_text=None):
     conn.commit()
     conn.close()
 
-def get_expenses():
+def get_expenses(month=None):
+    where, params = month_filter(month)
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute("SELECT id, amount_cents, category, description, date FROM expenses ORDER BY date DESC, id DESC")
+    cur.execute(f"SELECT id, amount_cents, category, description, date FROM expenses {where} ORDER BY date DESC, id DESC", params)
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -81,18 +87,28 @@ def get_categories():
     conn.close()
     return rows
 
-def get_total():
+def get_total(month=None):
+    where, params = month_filter(month)
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute("SELECT SUM(amount_cents) FROM expenses")
+    cur.execute(f"SELECT SUM(amount_cents) FROM expenses {where}", params)
     row = cur.fetchone()
     conn.close()
     return row[0] or 0
 
-def get_total_by_category():
+def get_total_by_category(month=None):
+    where, params = month_filter(month)
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute("SELECT category, SUM(amount_cents) FROM expenses GROUP BY category")
+    cur.execute(f"SELECT category, SUM(amount_cents) FROM expenses {where} GROUP BY category", params)
     rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_months():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT substr(date, 1, 7) FROM expenses ORDER BY 1 DESC")
+    rows = [row[0] for row in cur.fetchall()]
     conn.close()
     return rows

@@ -124,3 +124,60 @@ def test_init_db_migrates_float_amounts_to_cents(tmp_path, monkeypatch):
     assert database.get_total() == 1250 + 30 + 98075
     database.add_expense(100, "Food", "new", "2026-01-04")
     assert database.get_expenses()[0][0] == 4
+
+
+def add_two_months(db):
+    db.add_expense(1000, "Food", "oct food", "2026-10-05")
+    db.add_expense(2000, "Rent", "oct rent", "2026-10-01")
+    db.add_expense(500, "Food", "sep food", "2026-09-20")
+
+
+def test_get_expenses_filtered_by_month(db):
+    add_two_months(db)
+    assert [r[3] for r in db.get_expenses(month="2026-10")] == ["oct food", "oct rent"]
+    assert [r[3] for r in db.get_expenses(month="2026-09")] == ["sep food"]
+
+
+def test_no_month_returns_everything(db):
+    add_two_months(db)
+    assert len(db.get_expenses()) == 3
+    assert len(db.get_expenses(month=None)) == 3
+    assert len(db.get_expenses(month="")) == 3
+    assert db.get_total() == 3500
+
+
+def test_total_filtered_by_month(db):
+    add_two_months(db)
+    assert db.get_total(month="2026-10") == 3000
+    assert db.get_total(month="2026-09") == 500
+
+
+def test_total_by_category_filtered_by_month(db):
+    add_two_months(db)
+    assert dict(db.get_total_by_category(month="2026-10")) == {"Food": 1000, "Rent": 2000}
+    assert dict(db.get_total_by_category(month="2026-09")) == {"Food": 500}
+
+
+def test_month_without_expenses_is_empty(db):
+    add_two_months(db)
+    assert db.get_expenses(month="2026-01") == []
+    assert db.get_total(month="2026-01") == 0
+    assert db.get_total_by_category(month="2026-01") == []
+
+
+def test_month_filter_does_not_match_other_years(db):
+    db.add_expense(100, "Food", "this year", "2026-10-05")
+    db.add_expense(100, "Food", "last year", "2025-10-05")
+    assert [r[3] for r in db.get_expenses(month="2026-10")] == ["this year"]
+
+
+def test_month_filter_uses_parameter_not_sql_text(db):
+    add_two_months(db)
+    assert db.get_expenses(month="2026-10' OR '1'='1") == []
+
+
+def test_get_months_newest_first_and_distinct(db):
+    assert db.get_months() == []
+    add_two_months(db)
+    db.add_expense(100, "Food", "older", "2025-12-31")
+    assert db.get_months() == ["2026-10", "2026-09", "2025-12"]

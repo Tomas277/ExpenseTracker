@@ -197,3 +197,124 @@ def test_amounts_displayed_with_two_decimals(client):
     assert body.count("3.00 €".encode()) == 2
     assert body.count("0.10 €".encode()) == 2
     assert b"3.10 \xe2\x82\xac" in body
+
+
+def add_two_months(client):
+    add(client, description="oct expense", date="2026-10-05")
+    add(client, description="sep expense", date="2026-09-20", amount="5")
+
+
+def test_index_filtered_by_month(client):
+    add_two_months(client)
+    body = client.get("/?month=2026-10").data
+    assert b"oct expense" in body
+    assert b"sep expense" not in body
+
+
+def test_index_without_month_shows_everything(client):
+    add_two_months(client)
+    body = client.get("/").data
+    assert b"oct expense" in body
+    assert b"sep expense" in body
+
+
+@pytest.mark.parametrize("month", ["garbage", "2026-13", "2026-1", "2026-10-05", "", "20261"])
+def test_invalid_month_is_ignored(client, month):
+    add_two_months(client)
+    response = client.get("/", query_string={"month": month})
+    assert response.status_code == 200
+    assert b"oct expense" in response.data
+    assert b"sep expense" in response.data
+
+
+def test_totals_follow_month_filter(client):
+    add_two_months(client)
+    body = client.get("/?month=2026-09").data
+    assert b"5.00 \xe2\x82\xac" in body
+    assert b"15.00 \xe2\x82\xac" not in body
+    assert "Total · 2026-09".encode() in body
+
+
+def test_dropdown_lists_months_and_marks_selected(client):
+    add_two_months(client)
+    body = client.get("/?month=2026-09").data
+    assert b'<option value="2026-10">' in body
+    assert b'<option value="2026-09" selected>' in body
+    assert b'<option value="">All months</option>' in body
+
+
+def test_empty_month_message(client):
+    add_two_months(client)
+    assert b"No expenses in 2026-01." in client.get("/?month=2026-01").data
+
+
+def test_empty_database_message_without_filter(client):
+    assert b"No expenses yet." in client.get("/").data
+
+
+def test_forms_carry_the_month(client, db):
+    add_two_months(client)
+    body = client.get("/?month=2026-10").data
+    assert body.count(b'name="month" value="2026-10"') >= 2
+    expense_id = db.get_expenses(month="2026-10")[0][0]
+    assert f'href="/?month=2026-10&amp;edit={expense_id}"'.encode() in body
+
+
+def test_add_redirect_keeps_month(client, db):
+    response = add(client, month="2026-10")
+    assert response.headers["Location"].endswith("/?month=2026-10")
+
+
+def test_add_redirect_without_month(client, db):
+    assert add(client).headers["Location"].endswith("/")
+    assert "month" not in add(client, month="garbage").headers["Location"]
+
+
+def test_add_error_keeps_month(client, db):
+    add_two_months(client)
+    response = add(client, amount="abc", month="2026-09")
+    assert b"Amount must be a number" in response.data
+    assert b'<option value="2026-09" selected>' in response.data
+
+
+def test_edit_redirect_keeps_month(client, db):
+    add(client)
+    expense_id = db.get_expenses()[0][0]
+    response = edit(client, expense_id, month="2026-10")
+    assert response.headers["Location"].endswith("/?month=2026-10")
+
+
+def test_edit_error_keeps_month_and_edit_row(client, db):
+    add_two_months(client)
+    expense_id = db.get_expenses(month="2026-09")[0][0]
+    response = edit(client, expense_id, amount="abc", month="2026-09")
+    assert b"Amount must be a number" in response.data
+    assert b'class="editing"' in response.data
+    assert b'<option value="2026-09" selected>' in response.data
+    assert b"oct expense" not in response.data
+
+
+def test_edit_row_shown_under_month_filter(client, db):
+    add_two_months(client)
+    expense_id = db.get_expenses(month="2026-09")[0][0]
+    body = client.get(f"/?month=2026-09&edit={expense_id}").data
+    assert b'class="editing"' in body
+    assert b'href="/?month=2026-09"' in body
+
+
+def test_delete_redirect_keeps_month(client, db):
+    add(client)
+    expense_id = db.get_expenses()[0][0]
+    response = client.post("/delete", data={"expense_id": expense_id, "month": "2026-10"})
+    assert response.headers["Location"].endswith("/?month=2026-10")
+    assert db.get_expenses() == []
+
+
+def test_delete_bad_id_keeps_month(client):
+    response = client.post("/delete", data={"expense_id": "x", "month": "2026-10"})
+    assert response.headers["Location"].endswith("/?month=2026-10")
+
+
+def test_month_value_is_escaped_in_page(client):
+    body = client.get("/", query_string={"month": '"><script>alert(1)</script>'}).data
+    assert b"<script>alert(1)</script>" not in body

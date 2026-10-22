@@ -75,6 +75,30 @@ form.add {
 
 form.add input[type="date"] { color-scheme: light dark; }
 
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.section-head h2 { margin: 0; }
+.filter { margin: 0; }
+
+select {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  color-scheme: light dark;
+}
+select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 tr.editing td { vertical-align: top; }
 tr.editing input { width: 100%; padding: 0.35rem 0.5rem; }
 tr.editing input.amount { text-align: right; min-width: 5.5rem; }
