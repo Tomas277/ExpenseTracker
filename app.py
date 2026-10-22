@@ -1,9 +1,9 @@
 from datetime import date
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, url_for
 
-from database import add_expense, delete_expense, get_categories, get_expense, get_total, get_total_by_category, init_db, get_expenses, update_expense
+from database import add_expense, delete_expense, get_categories, get_expense, get_months, get_total, get_total_by_category, init_db, get_expenses, update_expense
 
 MAX_CENTS = 10**12
 
@@ -14,15 +14,17 @@ def create_app():
 
     @app.route("/")
     def index():
-        return render_index(edit_id=request.args.get("edit", type=int))
+        month = parse_month(request.args.get("month"))
+        return render_index(month=month, edit_id=request.args.get("edit", type=int))
 
     @app.route("/add", methods=["POST"])
     def add():
+        month = parse_month(request.form.get("month"))
         values, error = parse_expense_form()
         if error:
-            return render_index(error)
+            return render_index(error, month=month)
         add_expense(*values)
-        return redirect("/")
+        return redirect(url_for("index", month=month))
 
     @app.route("/edit/<int:expense_id>", methods=["GET", "POST"])
     def edit(expense_id):
@@ -30,24 +32,35 @@ def create_app():
             return redirect("/")
 
         if request.method == "GET":
-            return redirect(f"/?edit={expense_id}")
+            return redirect(url_for("index", edit=expense_id))
 
+        month = parse_month(request.form.get("month"))
         values, error = parse_expense_form()
         if error:
-            return render_index(error, edit_id=expense_id, edit_form=request.form)
+            return render_index(error, month=month, edit_id=expense_id, edit_form=request.form)
         update_expense(expense_id, *values)
-        return redirect("/")
+        return redirect(url_for("index", month=month))
 
     @app.route("/delete", methods=["POST"])
     def delete():
+        month = parse_month(request.form.get("month"))
         try:
             expense_id = int(request.form["expense_id"])
         except (KeyError, ValueError):
-            return redirect("/")
+            return redirect(url_for("index", month=month))
         delete_expense(expense_id)
-        return redirect("/")
+        return redirect(url_for("index", month=month))
 
     return app
+
+def parse_month(text):
+    if not text or len(text) != 7:
+        return None
+    try:
+        date.fromisoformat(text + "-01")
+    except ValueError:
+        return None
+    return text
 
 def parse_cents(text):
     try:
@@ -93,8 +106,8 @@ def parse_expense_form():
 
     return (cents, category, description, date_text), None
 
-def render_index(error=None, edit_id=None, edit_form=None):
-    expenses = get_expenses()
+def render_index(error=None, edit_id=None, edit_form=None, month=None):
+    expenses = get_expenses(month)
     if edit_id is not None and edit_form is None:
         match = next((e for e in expenses if e[0] == edit_id), None)
         if match:
@@ -102,7 +115,7 @@ def render_index(error=None, edit_id=None, edit_form=None):
             edit_form = {"amount": format_cents(amount_cents), "category": category, "description": description, "date": date_text}
     if edit_form is None:
         edit_id = None
-    return render_template("index.html", expenses=expenses, total=get_total(), by_category=get_total_by_category(), categories=get_categories(), error=error, edit_id=edit_id, edit_form=edit_form)
+    return render_template("index.html", expenses=expenses, total=get_total(month), by_category=get_total_by_category(month), categories=get_categories(), months=get_months(), month=month, error=error, edit_id=edit_id, edit_form=edit_form)
 
 if __name__ == "__main__":
     create_app().run(debug=True)

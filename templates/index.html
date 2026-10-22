@@ -12,7 +12,7 @@
     <header>
       <h1>Expenses</h1>
       <div class="total">
-        <span class="label">Total</span>
+        <span class="label">Total{% if month %} · {{ month }}{% endif %}</span>
         <span class="amount">{{ total|money }} €</span>
       </div>
     </header>
@@ -22,6 +22,7 @@
     {% endif %}
 
     <form class="add" action="/add" method="post">
+      <input type="hidden" name="month" value="{{ month or '' }}">
       <input name="amount" inputmode="decimal" placeholder="Amount">
       {{ category_input(categories, "category-list") }}
       <input name="description" placeholder="Description">
@@ -30,10 +31,23 @@
     </form>
 
     <section>
-      <h2>All expenses</h2>
+      <div class="section-head">
+        <h2>{% if month %}Expenses in {{ month }}{% else %}All expenses{% endif %}</h2>
+        <form class="filter" method="get" action="/">
+          <select name="month" aria-label="Filter by month" onchange="this.form.submit()">
+            <option value="">All months</option>
+            {% for m in months %}
+              <option value="{{ m }}"{% if m == month %} selected{% endif %}>{{ m }}</option>
+            {% endfor %}
+          </select>
+          <noscript><button>Filter</button></noscript>
+        </form>
+      </div>
       {% if expenses %}
         {% if edit_id %}
-          <form id="edit-form" action="/edit/{{ edit_id }}" method="post"></form>
+          <form id="edit-form" action="/edit/{{ edit_id }}" method="post">
+            <input type="hidden" name="month" value="{{ month or '' }}">
+          </form>
         {% endif %}
         <table>
           <thead>
@@ -55,7 +69,7 @@
                 <td class="num"><input form="edit-form" name="amount" class="amount" inputmode="decimal" placeholder="Amount" value="{{ edit_form.amount }}"></td>
                 <td class="actions">
                   <button form="edit-form" class="primary">Save</button>
-                  <a class="edit" href="/">Cancel</a>
+                  <a class="edit" href="{{ url_for('index', month=month) }}">Cancel</a>
                 </td>
               </tr>
               {% else %}
@@ -65,9 +79,10 @@
                 <td>{{ description }}</td>
                 <td class="num">{{ amount|money }} €</td>
                 <td class="actions">
-                  <a class="edit" href="/?edit={{ id }}">Edit</a>
+                  <a class="edit" href="{{ url_for('index', month=month, edit=id) }}">Edit</a>
                   <form action="/delete" method="post">
                     <input type="hidden" name="expense_id" value="{{ id }}">
+                    <input type="hidden" name="month" value="{{ month or '' }}">
                     <button class="delete" title="Delete expense">Delete</button>
                   </form>
                 </td>
@@ -77,7 +92,7 @@
           </tbody>
         </table>
       {% else %}
-        <p class="empty">No expenses yet. Add your first one above.</p>
+        <p class="empty">{% if month %}No expenses in {{ month }}.{% else %}No expenses yet. Add your first one above.{% endif %}</p>
       {% endif %}
     </section>
 
